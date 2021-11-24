@@ -12,4 +12,5 @@ tensorflow-hub==0.9.0
 imageio==2.9.0
 tqdm==4.48.2
 librosa==0.8.1
-mutagen
+python-dotenv==0.19.2
+pydot==1.4.2

@@ -13,7 +13,7 @@ def preprocess(rootdir):
     """
     audio_data = []
     sr_data = []
-    genre_data = [] #np.array([])
+    genre_data = []
 
     for subdir, _, files in os.walk(rootdir):
         for file in files:

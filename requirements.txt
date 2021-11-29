@@ -14,3 +14,5 @@ tqdm==4.48.2
 librosa==0.8.1
 python-dotenv==0.19.2
 pydot==1.4.2
+scipy
+pandas

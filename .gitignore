@@ -4,3 +4,4 @@ fma_metadata.zip
 fma_small.zip
 env/
 .DS_Store
+__pycache__/

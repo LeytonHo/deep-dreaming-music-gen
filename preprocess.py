@@ -32,8 +32,8 @@ def preprocess(rootdir):
 
     for subdir, _, files in os.walk(rootdir):
         for file in files:
-            if file.endswith('.mp3') and np.shape(sr_data)[0] < 5:
-            # if file.endswith('.mp3'):
+            #if file.endswith('.mp3') and np.shape(sr_data)[0] < 100:
+            if file.endswith('.mp3'):
                 try:
                     filepath = subdir + '/' + file
                     track_id = int(os.path.splitext(file)[0])
@@ -48,7 +48,14 @@ def preprocess(rootdir):
                     sr_data = np.append(sr_data, sr)
                     genre_data = np.append(genre_data, genre)
 
+                    if np.shape(sr_data)[0] % 100 == 0:
+                        print("finished ", np.shape(sr_data)[0])
+
                 except RuntimeError:
+                    # Ignore malformed mp3 files
+                    continue
+            
+                except Exception:
                     # Ignore malformed mp3 files
                     continue
 

@@ -1,8 +1,9 @@
+import soundfile as sf
 import tensorflow as tf
 from autoencoder import Autoencoder
 import pickle
 import numpy as np
-from preprocess import INPUT_SIZE
+from preprocess import INPUT_SIZE, SAMPLE_RATE
 
 def train(model : Autoencoder, train_data, num_epochs, batch_size):
     """
@@ -16,14 +17,16 @@ def train(model : Autoencoder, train_data, num_epochs, batch_size):
 	"""
     for n in range(num_epochs):
         print("Epoch: ", n)
+        total_loss = 0
         for i in range(0, len(train_data), batch_size):
             batch_data = train_data[i : i + batch_size]
             with tf.GradientTape() as tape:
                 decoded = model.call(batch_data)
                 loss = model.loss(decoded, batch_data)
-                print("Loss: ", loss)
+                total_loss += loss
             gradients = tape.gradient(loss, model.trainable_variables)
             model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+        print("Total Loss: ", total_loss)
 
 def test(model, test_data):
     """
@@ -34,6 +37,11 @@ def test(model, test_data):
 	:returns: accuracy of the test set
 	"""
     decoded = model.call(test_data)
+
+    # write first decoded thing to wav file! 
+    sf.write('input.wav', test_data[0], SAMPLE_RATE)
+    sf.write('output.wav', decoded[0], SAMPLE_RATE)
+
     return model.accuracy(decoded, test_data)
 
 def main():
@@ -53,7 +61,7 @@ def main():
     x_train = audio_data[:train_tracks]
     x_test = audio_data[train_tracks:]
     
-    train(autoencoder, x_train, 10, 5)
+    train(autoencoder, x_train, 10, 100)
     accuracy = test(autoencoder, x_test)
     print("Accuracy: ", accuracy)
 

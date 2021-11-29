@@ -89,10 +89,6 @@ def test(model, test_inputs, test_labels):
     """
 
     logits = model.call(test_inputs)
-    print("LOGITS: ")
-    print(logits)
-    print("test_labels: ")
-    print(test_labels)
     return model.accuracy(logits, test_labels)
 
 def main():
@@ -113,6 +109,8 @@ def main():
 
     # TODO: Convert labels to one-hot vectors / use another approach
     # Figure out a mapping between genre # (i.e. 103) to one-hot vector index for this
+
+    # Hip-Hop (21), Electronic (15), Rock (12), Instrumental (1235), International (2), Experimental (38), Pop (10) and Folk (17)
 
     classifier.train(x_train, y_train)
     accuracy = test(classifier, x_test, y_test)

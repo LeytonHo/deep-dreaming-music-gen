@@ -50,11 +50,10 @@ def main():
 
     with open('preprocessed.pickle', 'rb') as f:
         audio_data, sr_data, genre_data = pickle.load(f)
-    
-    print(np.shape(audio_data))
-    print(np.shape(sr_data))
-    print(np.shape(genre_data))
 
+    print(np.shape(audio_data))
+    audio_data = np.reshape(audio_data, (np.shape(audio_data)[0], np.shape(audio_data)[1], 1))
+    print(np.shape(audio_data))
     total_tracks = np.shape(audio_data)[0]
     train_tracks = int(total_tracks * 2 / 3)
     print(train_tracks)

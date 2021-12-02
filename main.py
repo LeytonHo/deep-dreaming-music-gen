@@ -22,27 +22,37 @@ def train(model : Autoencoder, train_data, num_epochs, batch_size):
             batch_data = train_data[i : i + batch_size]
             with tf.GradientTape() as tape:
                 decoded = model.call(batch_data)
+                batch_data = tf.slice(batch_data, (0,0,0), tf.shape(decoded))
                 loss = model.loss(decoded, batch_data)
                 total_loss += loss
             gradients = tape.gradient(loss, model.trainable_variables)
             model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
         print("Total Loss: ", total_loss)
 
-def test(model, test_data):
+    sf.write('input-train.wav', batch_data[0], SAMPLE_RATE)
+    sf.write('output-train.wav', decoded[0], SAMPLE_RATE)
+
+def test(model, test_data, batch_size):
     """
 	Runs through one epoch - all testing examples.
 
 	:param model: the initialized model to use for forward and backward pass
 	:param test_data: french test data (all data for testing) of shape (num_sentences, INPUT_SIZE)
-	:returns: accuracy of the test set
+	:returns: total loss of the test set
 	"""
-    decoded = model.call(test_data)
+    total_loss = 0
+    for i in range(0, len(test_data), batch_size):
+        batch_data = test_data[i : i + batch_size]
+        decoded = model.call(batch_data)
+        batch_data = tf.slice(batch_data, (0,0,0), tf.shape(decoded))
+        loss = model.loss(decoded, batch_data)
+        total_loss += loss
 
     # write first decoded thing to wav file! 
-    sf.write('input.wav', test_data[0], SAMPLE_RATE)
-    sf.write('output.wav', decoded[0], SAMPLE_RATE)
+    sf.write('input-test.wav', batch_data[0], SAMPLE_RATE)
+    sf.write('output-test.wav', decoded[0], SAMPLE_RATE)
 
-    return model.accuracy(decoded, test_data)
+    return total_loss
 
 def main():
     autoencoder = Autoencoder(INPUT_SIZE)
@@ -60,8 +70,11 @@ def main():
     x_train = audio_data[:train_tracks]
     x_test = audio_data[train_tracks:]
     
-    train(autoencoder, x_train, 10, 100)
-    accuracy = test(autoencoder, x_test)
+    autoencoder.build(np.shape(x_train))
+    autoencoder.summary()
+
+    train(autoencoder, x_train, 8, 70)
+    accuracy = test(autoencoder, x_test, 70)
     print("Accuracy: ", accuracy)
 
 if __name__ == '__main__':

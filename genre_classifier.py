@@ -7,16 +7,17 @@ import numpy as np
 class Classifier(tf.keras.Model):
     def __init__(self):
         super(Classifier, self).__init__()
-        self.layer1 = Dense(100, activation="relu")
-        self.layer2 = Dense(50, activation="relu")
-        self.layer3 = Dense(8)
+        self.layer1 = Dense(500, activation="relu")
+        self.layer2 = Dense(100, activation="relu")
+        self.layer3 = Dense(50, activation="relu")
+        self.layer4 = Dense(8, activation="relu")
+        #self.layer5 = Dense(50, activation="relu")
+        #self.layer6 = Dense(8)
 
-        self.batch_size = 10
+        self.batch_size = 50
 
     def call(self, x):
-        output = self.layer1(x)
-        output = self.layer2(output)
-        output = self.layer3(output)
+        output = self.layer4(self.layer3(self.layer2(self.layer1(x))))
 
         return output
 
@@ -94,26 +95,51 @@ def test(model, test_inputs, test_labels):
 def main():
     classifier = Classifier()
 
-    with open('preprocessed.pickle', 'rb') as f:
+    with open('full_preprocessed.pickle', 'rb') as f:
         audio_data, sr_data, genre_data = pickle.load(f)
     
     total_tracks = np.shape(audio_data)[0]
     train_tracks = int(total_tracks * 2 / 3)
+
+    # Audio and genre training data
     x_train = audio_data[:train_tracks]
-    x_test = audio_data[train_tracks:]
-
     y_train = genre_data[:train_tracks]
-    y_train = np.expand_dims(y_train, axis=1)
+
+    # Audio and genre testing data
+    x_test = audio_data[train_tracks:]
     y_test = genre_data[train_tracks:]
-    y_test = np.expand_dims(y_test, axis=1)
 
-    # TODO: Convert labels to one-hot vectors / use another approach
-    # Figure out a mapping between genre # (i.e. 103) to one-hot vector index for this
+    # Map genre IDs to indices as a procedure for converting to one-hot vectors
+    num_genres = 8
+    genre_mapping = {
+        21: 0, # Hip-Hop
+        15: 1, # Electronic
+        12: 2, # Rock
+        1235: 3, # Instrumental
+        2: 4, # International
+        38: 5, # Experimental
+        10: 6, # Pop
+        17: 7, # Folk
+    }
 
-    # Hip-Hop (21), Electronic (15), Rock (12), Instrumental (1235), International (2), Experimental (38), Pop (10) and Folk (17)
+    # Indices of valid genre data (genre in the genre_mapping)
+    y_train_indices = [i for i, genre in enumerate(y_train) if genre in genre_mapping]
+    y_test_indices = [i for i, genre in enumerate(y_test) if genre in genre_mapping]
 
-    classifier.train(x_train, y_train)
-    accuracy = test(classifier, x_test, y_test)
+    # Get valid genre data
+    y_train_genres = [genre_mapping[y_train[i]] for i in y_train_indices]
+    y_test_genres = [genre_mapping[y_test[i]] for i in y_test_indices]
+
+    # Get audio data associated with a avalid genre
+    x_train = np.array([x_train[i] for i in y_train_indices])
+    x_test = np.array([x_test[i] for i in y_test_indices])
+
+    # Convert genre data into one hot vectors
+    y_train_one_hot = np.eye(num_genres)[y_train_genres]
+    y_test_one_hot = np.eye(num_genres)[y_test_genres]
+    
+    classifier.train(x_train, y_train_one_hot)
+    accuracy = test(classifier, x_test, y_test_one_hot)
     print("Accuracy: ", accuracy)
 
 if __name__ == '__main__':

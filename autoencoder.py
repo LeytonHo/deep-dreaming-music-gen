@@ -1,5 +1,14 @@
 import tensorflow as tf
-from tensorflow.keras.layers import MaxPooling1D, Flatten, Reshape, Dense, Conv1D, Conv2D, Conv1DTranspose, Conv2DTranspose
+from tensorflow.keras.layers import (
+    MaxPooling1D,
+    Flatten,
+    Reshape,
+    Dense,
+    Conv1D,
+    Conv2D,
+    Conv1DTranspose,
+    Conv2DTranspose,
+)
 
 
 class Autoencoder(tf.keras.Model):
@@ -23,7 +32,8 @@ class Autoencoder(tf.keras.Model):
     def call(self, x):
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
+        # multiply by 2 because tanh between -1 and 1 and amplitude -2 to 2
         return 2 * decoded
-    
+
     def accuracy(self, x_pred, x_true):
-        return self.loss(x_pred, x_true) # TODO: fix
+        return self.loss(x_pred, x_true)  # TODO: fix

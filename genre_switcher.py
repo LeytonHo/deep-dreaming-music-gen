@@ -17,9 +17,12 @@ class GenreSwitcher(tf.keras.Model):
         )
         self.latent_vector = tf.Variable(initial_latent_vector)
 
-    def call(self, latent_vector):
+    def set_latent_vector(self, latent_vector):
+        self.latent_vector = tf.Variable(latent_vector)
+
+    def call(self):
         """Predict the classification based upon the learned latent vector."""
-        classification = self.classifier(latent_vector)
+        classification = self.classifier(self.latent_vector)
 
         return classification
 
@@ -32,3 +35,13 @@ class GenreSwitcher(tf.keras.Model):
     def compute_results(self):
         """Turn the learned latent vector into the music wave output."""
         return self.autoencoder.decoder(self.latent_vector)
+
+    def train(self, original_song):
+        # TODO
+        latent_vector = self.autoencoder.encoder(original_song)
+        self.set_latent_vector(latent_vector)
+
+        with tf.GradientTape() as tape:
+            classification = self.call()
+            loss = self.loss(classification)
+

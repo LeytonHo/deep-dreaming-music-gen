@@ -3,6 +3,7 @@ import tensorflow as tf
 from autoencoder import Autoencoder
 import pickle
 import numpy as np
+from genre_switcher import GenreSwitcher
 from preprocess import INPUT_SIZE, SAMPLE_RATE
 
 def train(model : Autoencoder, train_data, num_epochs, batch_size):
@@ -76,6 +77,13 @@ def main():
     train(autoencoder, x_train, 8, 70)
     accuracy = test(autoencoder, x_test, 70)
     print("Accuracy: ", accuracy)
+
+    # switch genres
+    classifier = "something"
+    new_genre = "pop or something"
+    genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre)
+    genre_switcher.compile(optimizer="adam")
+
 
 if __name__ == '__main__':
 	main()

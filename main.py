@@ -78,6 +78,9 @@ def main():
     accuracy = test(autoencoder, x_test, 70)
     print("Autoencoder accuracy: ", accuracy)
 
+    # Save autoencoder
+    autoencoder.save('saved_models/autoencoder')
+
     genre_inputs_train = autoencoder.call(x_train)
     genre_inputs_test = autoencoder.call(x_test)
 
@@ -90,6 +93,9 @@ def main():
     classifier.train(x_train, y_train_one_hot)
     accuracy = test(classifier, x_test, y_test_one_hot)
     print("Classifier accuracy: ", accuracy)
+
+    # Save classifier
+    classifier.save('saved_models/classifer')
 
 
 if __name__ == '__main__':

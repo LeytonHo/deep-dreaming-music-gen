@@ -30,10 +30,11 @@ class Autoencoder(tf.keras.Model):
     def call(self, x):
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
+        # multiply by 2 because tanh between -1 and 1 and amplitude -2 to 2
         return 2 * decoded
 
     def loss(self, x_pred, x_true):
         return tf.reduce_sum(tf.keras.losses.MeanSquaredError(x_true, x_pred))
-    
+
     def accuracy(self, x_pred, x_true):
-        return self.loss(x_pred, x_true) # TODO: fix
+        return self.loss(x_pred, x_true)  # TODO: fix

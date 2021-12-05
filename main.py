@@ -1,6 +1,7 @@
 import soundfile as sf
 import tensorflow as tf
 from autoencoder import Autoencoder
+from genre_classifier import Classifier
 import pickle
 import numpy as np
 from preprocess import INPUT_SIZE, SAMPLE_RATE
@@ -75,7 +76,21 @@ def main():
 
     train(autoencoder, x_train, 8, 70)
     accuracy = test(autoencoder, x_test, 70)
-    print("Accuracy: ", accuracy)
+    print("Autoencoder accuracy: ", accuracy)
+
+    genre_inputs_train = autoencoder.call(x_train)
+    genre_inputs_test = autoencoder.call(x_test)
+
+    classifier = Classifier()
+
+    y_train = genre_data[:train_tracks]
+    y_test = y_test = genre_data[train_tracks:]
+    x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
+    
+    classifier.train(x_train, y_train_one_hot)
+    accuracy = test(classifier, x_test, y_test_one_hot)
+    print("Classifier accuracy: ", accuracy)
+
 
 if __name__ == '__main__':
 	main()

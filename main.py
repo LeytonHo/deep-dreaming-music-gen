@@ -79,7 +79,8 @@ def main():
     print("Accuracy: ", accuracy)
 
     # switch genres
-    classifier = "something"
+    classifier = tf.keras.load_model('classifier')
+    autoencoder = tf.keras.load_model('autoencoder')
     new_genre = "pop or something"
     genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre)
     genre_switcher.compile(optimizer="adam")

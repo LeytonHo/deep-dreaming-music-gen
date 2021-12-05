@@ -1,29 +1,30 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import (
+    MaxPooling1D,
+    Flatten,
+    Reshape,
+    Dense,
+    Conv1D,
+    Conv2D,
+    Conv1DTranspose,
+    Conv2DTranspose,
+)
 
 
 class Autoencoder(tf.keras.Model):
     def __init__(self, input_size):
         super(Autoencoder, self).__init__()
-        self.input_size = input_size
-        self.hidden_dim1 = 1000
-        self.hidden_dim2 = 500
-        self.hidden_dim3 = 420
-        self.latent_dim = 420
         self.encoder = tf.keras.Sequential(
             [
-                Dense(self.hidden_dim1, activation="relu"),
-                Dense(self.hidden_dim2, activation="relu"),
-                Dense(self.hidden_dim3, activation="relu"),
-                Dense(self.latent_dim, activation="relu"),
+                Conv1D(128, 16, strides=8, activation="relu"),
+                MaxPooling1D(2),
+                Conv1D(32, 16, strides=8, activation="relu"),
             ]
         )
         self.decoder = tf.keras.Sequential(
             [
-                Dense(self.hidden_dim3, activation="relu"),
-                Dense(self.hidden_dim2, activation="relu"),
-                Dense(self.hidden_dim1, activation="relu"),
-                Dense(self.input_size, activation="tanh"),
+                Conv1DTranspose(32, 16, strides=8, activation="relu"),
+                Conv1DTranspose(1, 32, strides=16, activation="tanh"),
             ]
         )
 
@@ -32,9 +33,6 @@ class Autoencoder(tf.keras.Model):
         decoded = self.decoder(encoded)
         # multiply by 2 because tanh between -1 and 1 and amplitude -2 to 2
         return 2 * decoded
-
-    def loss(self, x_pred, x_true):
-        return tf.reduce_sum(tf.keras.losses.MeanSquaredError(x_true, x_pred))
 
     def accuracy(self, x_pred, x_true):
         return self.loss(x_pred, x_true)  # TODO: fix

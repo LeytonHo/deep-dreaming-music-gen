@@ -64,7 +64,11 @@ def preprocess(rootdir):
 
     return audio_data, sr_data, genre_data
 
-# Suppress expected warnings from librosa, source: https://github.com/librosa/librosa/issues/1015#issuecomment-552506963
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    preprocess('fma_small')
+def main():
+    # Suppress expected warnings from librosa, source: https://github.com/librosa/librosa/issues/1015#issuecomment-552506963
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        preprocess('fma_small')
+
+if __name__ == '__main__':
+	main()

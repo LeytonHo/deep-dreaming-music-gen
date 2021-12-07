@@ -29,6 +29,7 @@ class Autoencoder(tf.keras.Model):
             ],
             'decoder'
         )
+        self.input_size = input_size
 
     def call(self, x):
         encoded = self.encoder(x)

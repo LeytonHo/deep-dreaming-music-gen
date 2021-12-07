@@ -60,6 +60,7 @@ def get_train_and_test_data():
     with open('preprocessed.pickle', 'rb') as f:
         audio_data, sr_data, genre_data = pickle.load(f)
 
+
     print(np.shape(audio_data))
     audio_data = np.reshape(audio_data, (np.shape(audio_data)[0], np.shape(audio_data)[1], 1))
     print(np.shape(audio_data))
@@ -71,8 +72,20 @@ def get_train_and_test_data():
 
     y_train = genre_data[:train_tracks]
     y_test = y_test = genre_data[train_tracks:]
+
+    # shuffle audio and genre data
+    # print(x_train.shape, y_train.shape)
+    # new_order = tf.random.shuffle(np.arange(x_train.shape[0]))
+    # x_train = tf.gather(x_train, new_order)
+    # y_train = tf.gather(y_train, new_order)
+    # print('\n\n\n\n')
+    # print(x_train.shape, y_train.shape)
+    # new_order = tf.random.shuffle(np.arange(x_test.shape[0]))
+    # x_test = tf.gather(x_test, new_order)
+    # y_test = tf.gather(y_test, new_order)
+
     ############# SHRINK FOR TESTING ###############################################
-    SMOL = 10
+    SMOL = 15
     x_train = x_train[:SMOL]
     x_test = x_test[:SMOL]
     y_train = y_train[:SMOL]
@@ -83,8 +96,8 @@ def get_train_and_test_data():
 
 def main():
     # set whether to load or compute models
-    LOAD_AUTOENCODER = False
-    LOAD_CLASSIFIER = False
+    LOAD_AUTOENCODER = True
+    LOAD_CLASSIFIER = True
 
     # load data
     x_train, x_test, y_train, y_test = get_train_and_test_data()
@@ -130,20 +143,19 @@ def main():
     classifier.build(np.shape(genre_inputs_train))
     classifier.summary()
 
+    x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
+
     ######## TRAIN AND SAVE CLASSIFIER ####################################
     if not LOAD_CLASSIFIER:
-        x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
-
         classifier.train(x_train, y_train_one_hot)
-        accuracy = classifier_test(classifier, x_test, y_test_one_hot)
-        print("Classifier accuracy: ", accuracy)
-
         classifier.save_weights('saved_models/classifier')
 
     ######## LOAD CLASSIFIER ##############################################
     if LOAD_CLASSIFIER:
         classifier.load_weights('saved_models/classifier')
 
+    accuracy = classifier_test(classifier, x_test, y_test_one_hot)
+    print("Classifier accuracy: ", accuracy)
     # switch genres
     # classifier = tf.keras.load_model('classifier')
     # autoencoder = tf.keras.load_model('autoencoder')

@@ -8,7 +8,7 @@ class Classifier(tf.keras.Model):
     def __init__(self):
         super(Classifier, self).__init__()
         self.num_genres = 8
-        self.num_epochs = 10
+        self.num_epochs = 20
 
         # Consider a conv architecture
         self.layer1 = Flatten()
@@ -66,21 +66,23 @@ class Classifier(tf.keras.Model):
         shape (num_labels, num_classes)
         :return: Optionally list of losses per batch to use for visualize_loss
         '''
-        #for n in range(model.num_epochs):
-        #    print("Epoch: ", n)
-            #total_loss = 0
-        for i in range(0, len(train_inputs), model.batch_size):
-            batch_images = train_inputs[i:min(len(train_inputs), i + model.batch_size)]
-            batch_labels = train_labels[i:min(len(train_labels), i + model.batch_size)]
+        for n in range(model.num_epochs):
+            print("Epoch: ", n)
+            # total_loss = 0
+            for i in range(0, len(train_inputs), model.batch_size):
+                batch_images = train_inputs[i:min(len(train_inputs), i + model.batch_size)]
+                batch_labels = train_labels[i:min(len(train_labels), i + model.batch_size)]
 
-            optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-            with tf.GradientTape() as tape:
-                predictions = model.call(batch_images)
-                loss = model.loss(predictions, batch_labels)
-                #total_loss += loss
-            gradients = tape.gradient(loss, model.trainable_variables)
-            optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-            #print("Total Loss: ", total_loss)
+                optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+                with tf.GradientTape() as tape:
+                    predictions = model.call(batch_images)
+                    loss = model.loss(predictions, batch_labels)
+                    # total_loss += loss
+                gradients = tape.gradient(loss, model.trainable_variables)
+                optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+                #print("Total Loss: ", total_loss)
+                print("Loss: ", loss)
+        # print(model.call(batch_images), batch_labels)
     
     def pre_process(self, x_train, x_test, y_train, y_test):
         # Map genre IDs to indices as a procedure for converting to one-hot vectors
@@ -129,6 +131,7 @@ def classifier_test(model, test_inputs, test_labels):
     print("TEST FUNCTION")
     print(test_labels.shape)
     logits = model.call(test_inputs)
+    # print(logits, test_labels)
     return model.accuracy(logits, test_labels)
 
 def main():

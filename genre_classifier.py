@@ -104,8 +104,8 @@ class Classifier(tf.keras.Model):
         y_test_genres = [genre_mapping[y_test[i]] for i in y_test_indices]
 
         # Get audio data associated with a valid genre
-        x_train = np.array([x_train[i] for i in y_train_indices])
-        x_test = np.array([x_test[i] for i in y_test_indices])
+        x_train = np.take(x_train, y_train_indices, axis=0)
+        x_test = np.take(x_test, y_test_indices, axis=0)
 
         # Convert genre data into one hot vectors
         y_train_one_hot = np.eye(self.num_genres)[y_train_genres]

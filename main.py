@@ -107,31 +107,33 @@ def main():
     # autoencoder = tf.keras.models.load_model('saved_models/autoencoder_to_delete')
     autoencoder.load_weights('saved_models/autoencoder_to_delete').expect_partial()
 
+    ######## LOAD CLASSIFIER DATA #########################################
+    genre_inputs_train = autoencoder.call(x_train)
+    genre_inputs_test = autoencoder.call(x_test)
+
+    print("SHAPE OF genre inputs train, test")
+    print(genre_inputs_train.shape)
+    print(genre_inputs_test.shape)
+
+    # save autoencoder outputs
+    with open('autoencoder_output.pickle', 'wb') as f:
+        pickle.dump((genre_inputs_train, genre_inputs_test), f)
+
+    ######## CREATE CLASSIFIER ############################################
+    classifier = Classifier()
+    classifier.compute_output_shape(input_shape=np.shape(genre_inputs_train))
+    classifier.build(np.shape(genre_inputs_train))
+    classifier.summary()
+
     ######## TRAIN CLASSIFIER #############################################
-    # genre_inputs_train = autoencoder.call(x_train)
-    # genre_inputs_test = autoencoder.call(x_test)
+    x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
 
-    # print("SHAPE OF genre inputs train, test")
-    # print(genre_inputs_train.shape)
-    # print(genre_inputs_test.shape)
+    classifier.train(x_train, y_train_one_hot)
+    accuracy = classifier_test(classifier, x_test, y_test_one_hot)
+    print("Classifier accuracy: ", accuracy)
 
-    # with open('autoencoder_output.pickle', 'wb') as f:
-    #     pickle.dump((genre_inputs_train, genre_inputs_test), f)
-
-    # classifier = Classifier()
-
-    # x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
-    
-    # classifier.train(x_train, y_train_one_hot)
-    # accuracy = classifier_test(classifier, x_test, y_test_one_hot)
-    # print("Classifier accuracy: ", accuracy)
-
-    # # Save classifier
-    # classifier.compute_output_shape(input_shape=np.shape(genre_inputs_train))
-    # classifier.build(np.shape(genre_inputs_train))
-    # classifier.summary()
-    # classifier.save('saved_models/classifier')
-
+    ######## SAVE CLASSIFIER ##############################################
+    classifier.save_weights('saved_models/classifier')
 
     # switch genres
     # classifier = tf.keras.load_model('classifier')

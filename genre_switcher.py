@@ -46,7 +46,7 @@ class GenreSwitcher(tf.keras.Model):
             loss = self.loss(classification)
 
 def main():
-    pass
+    tf.keras.models.load_model('saved_models/saved_model.pb') 
 
 if __name__ == "__main__":
     main()

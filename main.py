@@ -56,10 +56,7 @@ def test(model, test_data, batch_size):
 
     return total_loss
 
-def main():
-    autoencoder = Autoencoder(INPUT_SIZE)
-    autoencoder.compile(optimizer="adam", loss=tf.keras.losses.MeanSquaredError())
-
+def get_train_and_test_data():
     with open('preprocessed.pickle', 'rb') as f:
         audio_data, sr_data, genre_data = pickle.load(f)
 
@@ -71,19 +68,45 @@ def main():
     print(train_tracks)
     x_train = audio_data[:train_tracks]
     x_test = audio_data[train_tracks:]
-    
+
+    y_train = genre_data[:train_tracks]
+    y_test = y_test = genre_data[train_tracks:]
+    ############# SHRINK FOR TESTING ###############################################
+    SMOL = 10
+    x_train = x_train[:SMOL]
+    x_test = x_test[:SMOL]
+    y_train = y_train[:SMOL]
+    y_test = y_test[:SMOL]
+    ################################################################################
+
+    return x_train, x_test, y_train, y_test
+
+def main():
+    # load data
+    x_train, x_test, y_train, y_test = get_train_and_test_data()
+
+    ############ CREATE AUTOENCODER ########################################
+    # create autoencoder
+    autoencoder = Autoencoder(INPUT_SIZE)
+    autoencoder.compile(optimizer="adam", loss=tf.keras.losses.MeanSquaredError())
     autoencoder.compute_output_shape(input_shape=np.shape(x_train))
     autoencoder.build(np.shape(x_train))
     autoencoder.summary()
 
+    # train autoencoder
     num_epochs = 10
-
     train(autoencoder, x_train, num_epochs, 70)
     accuracy = test(autoencoder, x_test, 70)
     print("Autoencoder accuracy: ", accuracy)
 
     # Save autoencoder
     autoencoder.save('saved_models/autoencoder_to_delete')
+
+    ######## LOADING ######################################################
+    # autoencoder = tf.keras.models.load_model('saved_models/autoencoder_to_delete')
+    # autoencoder.summary()
+    # autoencoder.build(np.shape(x_train))
+    # autoencoder.compile(optimizer='adam', loss=tf.keras.losses.MeanSquaredError())
 
     genre_inputs_train = autoencoder.call(x_train)
     genre_inputs_test = autoencoder.call(x_test)
@@ -97,8 +120,6 @@ def main():
 
     classifier = Classifier()
 
-    y_train = genre_data[:train_tracks]
-    y_test = y_test = genre_data[train_tracks:]
     x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
     
     classifier.train(x_train, y_train_one_hot)
@@ -109,15 +130,15 @@ def main():
     classifier.compute_output_shape(input_shape=np.shape(genre_inputs_train))
     classifier.build(np.shape(genre_inputs_train))
     classifier.summary()
-    classifier.save('saved_models/classifer')
+    classifier.save('saved_models/classifier')
 
 
     # switch genres
-    classifier = tf.keras.load_model('classifier')
-    autoencoder = tf.keras.load_model('autoencoder')
-    new_genre = "pop or something"
-    genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre)
-    genre_switcher.compile(optimizer="adam")
+    # classifier = tf.keras.load_model('classifier')
+    # autoencoder = tf.keras.load_model('autoencoder')
+    # new_genre = "pop or something"
+    # genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre)
+    # genre_switcher.compile(optimizer="adam")
 
 
 if __name__ == '__main__':

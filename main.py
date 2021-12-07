@@ -126,14 +126,17 @@ def main():
     classifier.summary()
 
     ######## TRAIN CLASSIFIER #############################################
-    x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
+    # x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
 
-    classifier.train(x_train, y_train_one_hot)
-    accuracy = classifier_test(classifier, x_test, y_test_one_hot)
-    print("Classifier accuracy: ", accuracy)
+    # classifier.train(x_train, y_train_one_hot)
+    # accuracy = classifier_test(classifier, x_test, y_test_one_hot)
+    # print("Classifier accuracy: ", accuracy)
 
     ######## SAVE CLASSIFIER ##############################################
-    classifier.save_weights('saved_models/classifier')
+    # classifier.save_weights('saved_models/classifier')
+
+    ######## LOAD CLASSIFIER ##############################################
+    classifier.load_weights('saved_models/classifier')
 
     # switch genres
     # classifier = tf.keras.load_model('classifier')

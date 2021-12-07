@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Flatten
 import pickle
 import numpy as np
 
@@ -8,19 +8,21 @@ class Classifier(tf.keras.Model):
     def __init__(self):
         super(Classifier, self).__init__()
         self.num_genres = 8
+        self.num_epochs = 10
 
         # Consider a conv architecture
-        # TODO: Add a Flatten layer
-        self.layer1 = Dense(1000, activation="tanh")
-        self.layer2 = Dense(500, activation="relu")
-        self.layer3 = Dense(250, activation="tanh")
-        self.layer4 = Dense(50, activation="relu")
-        self.layer5 = Dense(self.num_genres)
+        self.layer1 = Flatten()
+        self.layer2 = Dense(1000, activation="tanh")
+        self.layer3 = Dense(500, activation="relu")
+        self.layer4 = Dense(250, activation="tanh")
+        self.layer5 = Dense(50, activation="relu")
+        self.layer6 = Dense(self.num_genres)
 
         self.batch_size = 100
 
     def call(self, x):
-        output = self.layer5(self.layer4(self.layer3(self.layer2(self.layer1(x)))))
+        # TODO: use sequential
+        output = self.layer6(self.layer5(self.layer4(self.layer3(self.layer2(self.layer1(x))))))
         return output
 
     def loss(self, logits, labels):
@@ -64,7 +66,9 @@ class Classifier(tf.keras.Model):
         shape (num_labels, num_classes)
         :return: Optionally list of losses per batch to use for visualize_loss
         '''
-
+        #for n in range(model.num_epochs):
+        #    print("Epoch: ", n)
+            #total_loss = 0
         for i in range(0, len(train_inputs), model.batch_size):
             batch_images = train_inputs[i:min(len(train_inputs), i + model.batch_size)]
             batch_labels = train_labels[i:min(len(train_labels), i + model.batch_size)]
@@ -73,9 +77,10 @@ class Classifier(tf.keras.Model):
             with tf.GradientTape() as tape:
                 predictions = model.call(batch_images)
                 loss = model.loss(predictions, batch_labels)
-        
+                #total_loss += loss
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+            #print("Total Loss: ", total_loss)
     
     def pre_process(self, x_train, x_test, y_train, y_test):
         # Map genre IDs to indices as a procedure for converting to one-hot vectors
@@ -109,7 +114,7 @@ class Classifier(tf.keras.Model):
         return x_train, x_test, y_train_one_hot, y_test_one_hot
 
 
-def test(model, test_inputs, test_labels):
+def classifier_test(model, test_inputs, test_labels):
     """
     Tests the model on the test inputs and labels. You should NOT randomly 
     flip images or do any extra preprocessing.
@@ -146,7 +151,7 @@ def main():
     x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(x_train, x_test, y_train, y_test)
     
     classifier.train(x_train, y_train_one_hot)
-    accuracy = test(classifier, x_test, y_test_one_hot)
+    accuracy = classifier_test(classifier, x_test, y_test_one_hot)
     print("Accuracy: ", accuracy)
 
 if __name__ == '__main__':

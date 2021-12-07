@@ -1,7 +1,7 @@
 import soundfile as sf
 import tensorflow as tf
 from autoencoder import Autoencoder
-from genre_classifier import Classifier
+from genre_classifier import Classifier, classifier_test
 import pickle
 import numpy as np
 from preprocess import INPUT_SIZE, SAMPLE_RATE
@@ -71,18 +71,28 @@ def main():
     x_train = audio_data[:train_tracks]
     x_test = audio_data[train_tracks:]
     
+    autoencoder.compute_output_shape(input_shape=np.shape(x_train))
     autoencoder.build(np.shape(x_train))
     autoencoder.summary()
 
-    train(autoencoder, x_train, 8, 70)
+    num_epochs = 10
+
+    train(autoencoder, x_train, num_epochs, 70)
     accuracy = test(autoencoder, x_test, 70)
     print("Autoencoder accuracy: ", accuracy)
 
     # Save autoencoder
-    autoencoder.save('saved_models/autoencoder')
+    autoencoder.save('saved_models/autoencoder_to_delete')
 
     genre_inputs_train = autoencoder.call(x_train)
     genre_inputs_test = autoencoder.call(x_test)
+
+    print("SHAPE OF genre inputs train, test")
+    print(genre_inputs_train.shape)
+    print(genre_inputs_test.shape)
+
+    with open('autoencoder_output.pickle', 'wb') as f:
+        pickle.dump((genre_inputs_train, genre_inputs_test), f)
 
     classifier = Classifier()
 
@@ -91,10 +101,13 @@ def main():
     x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
     
     classifier.train(x_train, y_train_one_hot)
-    accuracy = test(classifier, x_test, y_test_one_hot)
+    accuracy = classifier_test(classifier, x_test, y_test_one_hot)
     print("Classifier accuracy: ", accuracy)
 
     # Save classifier
+    classifier.compute_output_shape(input_shape=np.shape(genre_inputs_train))
+    classifier.build(np.shape(genre_inputs_train))
+    classifier.summary()
     classifier.save('saved_models/classifer')
 
 

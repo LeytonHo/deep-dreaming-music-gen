@@ -156,10 +156,11 @@ def main():
 
     accuracy = classifier_test(classifier, x_test, y_test_one_hot)
     print("Classifier accuracy: ", accuracy)
+
     # switch genres
     # classifier = tf.keras.load_model('classifier')
     # autoencoder = tf.keras.load_model('autoencoder')
-    # new_genre = "pop or something"
+    # new_genre = 5
     # genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre)
     # genre_switcher.compile(optimizer="adam")
 

@@ -85,7 +85,7 @@ def get_train_and_test_data():
     # y_test = tf.gather(y_test, new_order)
 
     ############# SHRINK FOR TESTING ###############################################
-    SMOL = 15
+    SMOL = 100
     x_train = x_train[:SMOL]
     x_test = x_test[:SMOL]
     y_train = y_train[:SMOL]
@@ -160,9 +160,11 @@ def main():
     # switch genres
     # classifier = tf.keras.load_model('classifier')
     # autoencoder = tf.keras.load_model('autoencoder')
-    # new_genre = 5
-    # genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre)
-    # genre_switcher.compile(optimizer="adam")
+    new_genre = 5
+    genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre)
+    genre_switcher.compile(optimizer="adam")
+    # print(x_test[0], x_test[0].shape)
+    genre_switcher.train(x_test[0])
 
 
 if __name__ == '__main__':

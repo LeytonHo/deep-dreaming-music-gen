@@ -20,13 +20,15 @@ class Autoencoder(tf.keras.Model):
                 MaxPooling1D(2),
                 Conv1D(32, 16, strides=8, activation="relu"),
                 MaxPooling1D(2),
-            ]
+            ],
+            'encoder'
         )
         self.decoder = tf.keras.Sequential(
             [
                 Conv1DTranspose(32, 32, strides=16, activation="relu"),
                 Conv1DTranspose(1, 32, strides=16, activation="tanh"),
-            ]
+            ],
+            'decoder'
         )
 
     def call(self, x):

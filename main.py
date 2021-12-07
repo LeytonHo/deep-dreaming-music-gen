@@ -82,6 +82,10 @@ def get_train_and_test_data():
     return x_train, x_test, y_train, y_test
 
 def main():
+    # set whether to load or compute models
+    LOAD_AUTOENCODER = False
+    LOAD_CLASSIFIER = False
+
     # load data
     x_train, x_test, y_train, y_test = get_train_and_test_data()
 
@@ -93,19 +97,20 @@ def main():
     autoencoder.build(np.shape(x_train))
     autoencoder.summary()
 
-    ############ TRAIN AUTOENCODER #########################################
-    # # train autoencoder
-    # num_epochs = 10
-    # train(autoencoder, x_train, num_epochs, 70)
-    # accuracy = test(autoencoder, x_test, 70)
-    # print("Autoencoder accuracy: ", accuracy)
+    ############ TRAIN AND SAVE AUTOENCODER #############################
+    if not LOAD_AUTOENCODER:
+        # train autoencoder
+        num_epochs = 10
+        train(autoencoder, x_train, num_epochs, 70)
+        accuracy = test(autoencoder, x_test, 70)
+        print("Autoencoder accuracy: ", accuracy)
 
-    # # Save autoencoder
-    # autoencoder.save_weights('saved_models/autoencoder_to_delete')
+        # Save autoencoder
+        autoencoder.save_weights('saved_models/autoencoder_to_delete')
 
-    ######## LOADING AUTOENCODER ##########################################
-    # autoencoder = tf.keras.models.load_model('saved_models/autoencoder_to_delete')
-    autoencoder.load_weights('saved_models/autoencoder_to_delete').expect_partial()
+    ######## LOAD AUTOENCODER ##########################################
+    if LOAD_AUTOENCODER:
+        autoencoder.load_weights('saved_models/autoencoder_to_delete').expect_partial()
 
     ######## LOAD CLASSIFIER DATA #########################################
     genre_inputs_train = autoencoder.call(x_train)
@@ -125,18 +130,19 @@ def main():
     classifier.build(np.shape(genre_inputs_train))
     classifier.summary()
 
-    ######## TRAIN CLASSIFIER #############################################
-    # x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
+    ######## TRAIN AND SAVE CLASSIFIER ####################################
+    if not LOAD_CLASSIFIER:
+        x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
 
-    # classifier.train(x_train, y_train_one_hot)
-    # accuracy = classifier_test(classifier, x_test, y_test_one_hot)
-    # print("Classifier accuracy: ", accuracy)
+        classifier.train(x_train, y_train_one_hot)
+        accuracy = classifier_test(classifier, x_test, y_test_one_hot)
+        print("Classifier accuracy: ", accuracy)
 
-    ######## SAVE CLASSIFIER ##############################################
-    # classifier.save_weights('saved_models/classifier')
+        classifier.save_weights('saved_models/classifier')
 
     ######## LOAD CLASSIFIER ##############################################
-    classifier.load_weights('saved_models/classifier')
+    if LOAD_CLASSIFIER:
+        classifier.load_weights('saved_models/classifier')
 
     # switch genres
     # classifier = tf.keras.load_model('classifier')

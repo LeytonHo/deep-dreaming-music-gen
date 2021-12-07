@@ -7,18 +7,20 @@ import numpy as np
 class Classifier(tf.keras.Model):
     def __init__(self):
         super(Classifier, self).__init__()
-        self.layer1 = Dense(500, activation="relu")
-        self.layer2 = Dense(100, activation="relu")
-        self.layer3 = Dense(50, activation="relu")
-        self.layer4 = Dense(8, activation="relu")
-        #self.layer5 = Dense(50, activation="relu")
-        #self.layer6 = Dense(8)
+        self.num_genres = 8
 
-        self.batch_size = 50
+        # Consider a conv architecture
+        # TODO: Add a Flatten layer
+        self.layer1 = Dense(1000, activation="tanh")
+        self.layer2 = Dense(500, activation="relu")
+        self.layer3 = Dense(250, activation="tanh")
+        self.layer4 = Dense(50, activation="relu")
+        self.layer5 = Dense(self.num_genres)
+
+        self.batch_size = 100
 
     def call(self, x):
-        output = self.layer4(self.layer3(self.layer2(self.layer1(x))))
-
+        output = self.layer5(self.layer4(self.layer3(self.layer2(self.layer1(x)))))
         return output
 
     def loss(self, logits, labels):
@@ -74,6 +76,37 @@ class Classifier(tf.keras.Model):
         
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    
+    def pre_process(self, x_train, x_test, y_train, y_test):
+        # Map genre IDs to indices as a procedure for converting to one-hot vectors
+        genre_mapping = {
+            21: 0, # Hip-Hop
+            15: 1, # Electronic
+            12: 2, # Rock
+            1235: 3, # Instrumental
+            2: 4, # International
+            38: 5, # Experimental
+            10: 6, # Pop
+            17: 7, # Folk
+        }
+
+        # Indices of valid genre data (genre in the genre_mapping)
+        y_train_indices = [i for i, genre in enumerate(y_train) if genre in genre_mapping]
+        y_test_indices = [i for i, genre in enumerate(y_test) if genre in genre_mapping]
+
+        # Get valid genre data
+        y_train_genres = [genre_mapping[y_train[i]] for i in y_train_indices]
+        y_test_genres = [genre_mapping[y_test[i]] for i in y_test_indices]
+
+        # Get audio data associated with a valid genre
+        x_train = np.array([x_train[i] for i in y_train_indices])
+        x_test = np.array([x_test[i] for i in y_test_indices])
+
+        # Convert genre data into one hot vectors
+        y_train_one_hot = np.eye(self.num_genres)[y_train_genres]
+        y_test_one_hot = np.eye(self.num_genres)[y_test_genres]
+
+        return x_train, x_test, y_train_one_hot, y_test_one_hot
 
 
 def test(model, test_inputs, test_labels):
@@ -88,14 +121,15 @@ def test(model, test_inputs, test_labels):
     :return: test accuracy - this should be the average accuracy across
     all batches
     """
-
+    print("TEST FUNCTION")
+    print(test_labels.shape)
     logits = model.call(test_inputs)
     return model.accuracy(logits, test_labels)
 
 def main():
     classifier = Classifier()
 
-    with open('full_preprocessed.pickle', 'rb') as f:
+    with open('preprocessed.pickle', 'rb') as f:
         audio_data, sr_data, genre_data = pickle.load(f)
     
     total_tracks = np.shape(audio_data)[0]
@@ -109,34 +143,7 @@ def main():
     x_test = audio_data[train_tracks:]
     y_test = genre_data[train_tracks:]
 
-    # Map genre IDs to indices as a procedure for converting to one-hot vectors
-    num_genres = 8
-    genre_mapping = {
-        21: 0, # Hip-Hop
-        15: 1, # Electronic
-        12: 2, # Rock
-        1235: 3, # Instrumental
-        2: 4, # International
-        38: 5, # Experimental
-        10: 6, # Pop
-        17: 7, # Folk
-    }
-
-    # Indices of valid genre data (genre in the genre_mapping)
-    y_train_indices = [i for i, genre in enumerate(y_train) if genre in genre_mapping]
-    y_test_indices = [i for i, genre in enumerate(y_test) if genre in genre_mapping]
-
-    # Get valid genre data
-    y_train_genres = [genre_mapping[y_train[i]] for i in y_train_indices]
-    y_test_genres = [genre_mapping[y_test[i]] for i in y_test_indices]
-
-    # Get audio data associated with a avalid genre
-    x_train = np.array([x_train[i] for i in y_train_indices])
-    x_test = np.array([x_test[i] for i in y_test_indices])
-
-    # Convert genre data into one hot vectors
-    y_train_one_hot = np.eye(num_genres)[y_train_genres]
-    y_test_one_hot = np.eye(num_genres)[y_test_genres]
+    x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(x_train, x_test, y_train, y_test)
     
     classifier.train(x_train, y_train_one_hot)
     accuracy = test(classifier, x_test, y_test_one_hot)

@@ -73,17 +73,6 @@ def get_train_and_test_data():
     y_train = genre_data[:train_tracks]
     y_test = y_test = genre_data[train_tracks:]
 
-    # shuffle audio and genre data
-    # print(x_train.shape, y_train.shape)
-    # new_order = tf.random.shuffle(np.arange(x_train.shape[0]))
-    # x_train = tf.gather(x_train, new_order)
-    # y_train = tf.gather(y_train, new_order)
-    # print('\n\n\n\n')
-    # print(x_train.shape, y_train.shape)
-    # new_order = tf.random.shuffle(np.arange(x_test.shape[0]))
-    # x_test = tf.gather(x_test, new_order)
-    # y_test = tf.gather(y_test, new_order)
-
     ############# SHRINK FOR TESTING ###############################################
     SMOL = 100
     x_train = x_train[:SMOL]
@@ -147,9 +136,6 @@ def main():
 
     ######## TRAIN AND SAVE CLASSIFIER ####################################
     if not LOAD_CLASSIFIER:
-        # x_train_latent_vector = autoencoder.encoder(x_train)
-        # print(x_train.shape, y_train_one_hot.shape)
-        # print(x_train_latent_vector.shape)
         classifier.train(x_train_classifier, y_train_one_hot)
         classifier.save_weights('saved_models/classifier')
 
@@ -161,27 +147,14 @@ def main():
     print("Classifier accuracy: ", accuracy)
 
     # switch genres
-    # classifier = tf.keras.load_model('classifier')
-    # autoencoder = tf.keras.load_model('autoencoder')
     new_genre = 5
     input = x_test[:1]
     genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre, input)
     genre_switcher.compile(optimizer="adam")
 
-    # # print(x_test[0], x_test[0].shape)
-    # input = x_test[:1]
-    # print(input.shape)
-    # latent_vector = autoencoder.encoder(input)
-    # # latent_vector = autoencoder.encoder(x_test[:1])
-    # # print(latent_vector)
-    # classified = classifier.call(latent_vector)
-    # print(classified.shape)
-
     genre_switcher.train(input)
     new_song = genre_switcher.compute_results()
     autoencoded_song = autoencoder.call(input)
-    # print(new_song.shape)
-    # print(input.shape)
     print(input)
     print(new_song)
 

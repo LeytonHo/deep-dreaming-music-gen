@@ -100,12 +100,12 @@ class Classifier(tf.keras.Model):
         }
 
         # Indices of valid genre data (genre in the genre_mapping)
-        y_train_indices = [i for i, genre in enumerate(y_train) if genre in genre_mapping]
-        y_test_indices = [i for i, genre in enumerate(y_test) if genre in genre_mapping]
+        y_train_indices = [i for i, genre in enumerate(y_train) if genre.numpy() in genre_mapping]
+        y_test_indices = [i for i, genre in enumerate(y_test) if genre.numpy() in genre_mapping]
 
         # Get valid genre data
-        y_train_genres = [genre_mapping[y_train[i]] for i in y_train_indices]
-        y_test_genres = [genre_mapping[y_test[i]] for i in y_test_indices]
+        y_train_genres = [genre_mapping[y_train[i].numpy()] for i in y_train_indices]
+        y_test_genres = [genre_mapping[y_test[i].numpy()] for i in y_test_indices]
 
         # Get audio data associated with a valid genre
         x_train = np.take(x_train, y_train_indices, axis=0)

@@ -65,12 +65,10 @@ def get_train_and_test_data():
     audio_data = np.reshape(audio_data, (np.shape(audio_data)[0], np.shape(audio_data)[1], 1))
 
     # shuffle audio and genre data
-    '''
     new_order = tf.random.shuffle(np.arange(len(audio_data)))
     audio_data = tf.gather(audio_data, new_order)
     genre_data = tf.gather(genre_data, new_order)
-    '''
-
+    
     print(np.shape(audio_data))
     total_tracks = np.shape(audio_data)[0]
     train_tracks = int(total_tracks * 2 / 3)
@@ -82,7 +80,7 @@ def get_train_and_test_data():
     y_test = y_test = genre_data[train_tracks:]
 
     ############# SHRINK FOR TESTING ###############################################
-    SMOL = 300
+    SMOL = 10
     x_train = x_train[:SMOL]
     x_test = x_test[:SMOL]
     y_train = y_train[:SMOL]

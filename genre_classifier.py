@@ -9,20 +9,22 @@ class Classifier(tf.keras.Model):
         super(Classifier, self).__init__()
         self.num_genres = 8
         self.num_epochs = 20
-
-        # Consider a conv architecture
-        self.layer1 = Flatten()
-        self.layer2 = Dense(1000, activation="tanh")
-        self.layer3 = Dense(500, activation="relu")
-        self.layer4 = Dense(250, activation="tanh")
-        self.layer5 = Dense(50, activation="relu")
-        self.layer6 = Dense(self.num_genres)
-
         self.batch_size = 100
 
+        self.classifier_layers = tf.keras.Sequential(
+            [
+                Flatten(),
+                Dense(1000, activation="tanh"),
+                Dense(500, activation="relu"),
+                Dense(250, activation="tanh"),
+                Dense(50, activation="relu"),
+                Dense(self.num_genres)
+            ],
+            'classifier_layers'
+        )
+
     def call(self, x):
-        # TODO: use sequential
-        output = self.layer6(self.layer5(self.layer4(self.layer3(self.layer2(self.layer1(x))))))
+        output = self.classifier_layers(x)
         return output
 
     def loss(self, logits, labels):
@@ -128,10 +130,7 @@ def classifier_test(model, test_inputs, test_labels):
     :return: test accuracy - this should be the average accuracy across
     all batches
     """
-    print("TEST FUNCTION")
-    print(test_labels.shape)
     logits = model.call(test_inputs)
-    # print(logits, test_labels)
     return model.accuracy(logits, test_labels)
 
 def main():

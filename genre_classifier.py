@@ -43,16 +43,17 @@ class Classifier(tf.keras.Model):
     def accuracy(self, logits, labels):
         """
         Calculates the model's prediction accuracy by comparing
-        logits to correct labels – no need to modify this.
+        logits to correct labels. We use TopKCategoricalAccuracy because many music genres sound similar.
         
         :param logits: a matrix of size (num_inputs, self.num_classes); during training, this will be (batch_size, self.num_classes)
         containing the result of multiple convolution and feed forward layers
         :param labels: matrix of size (num_labels, self.num_classes) containing the answers, during training, this will be (batch_size, self.num_classes)
         
-        :return: the accuracy of the model as a Tensor
+        :return: the accuracy of the model as a scalar
         """
-        correct_predictions = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
-        return tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
+        m = tf.keras.metrics.TopKCategoricalAccuracy(k=3)
+        m.update_state(labels, logits)
+        return m.result().numpy()
     
     def train(model, train_inputs, train_labels):
         '''
@@ -70,21 +71,19 @@ class Classifier(tf.keras.Model):
         '''
         for n in range(model.num_epochs):
             print("Epoch: ", n)
-            # total_loss = 0
+            total_loss = 0
             for i in range(0, len(train_inputs), model.batch_size):
                 batch_images = train_inputs[i:min(len(train_inputs), i + model.batch_size)]
                 batch_labels = train_labels[i:min(len(train_labels), i + model.batch_size)]
 
-                optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+                optimizer = tf.keras.optimizers.Adam(learning_rate=0.0025)
                 with tf.GradientTape() as tape:
                     predictions = model.call(batch_images)
                     loss = model.loss(predictions, batch_labels)
-                    # total_loss += loss
+                    total_loss += loss
                 gradients = tape.gradient(loss, model.trainable_variables)
                 optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-                #print("Total Loss: ", total_loss)
-                print("Loss: ", loss)
-        # print(model.call(batch_images), batch_labels)
+                print("Total Loss: ", total_loss)
     
     def pre_process(self, x_train, x_test, y_train, y_test):
         # Map genre IDs to indices as a procedure for converting to one-hot vectors

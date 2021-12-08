@@ -85,7 +85,7 @@ def get_train_and_test_data():
     # y_test = tf.gather(y_test, new_order)
 
     ############# SHRINK FOR TESTING ###############################################
-    SMOL = 1000
+    SMOL = 100
     x_train = x_train[:SMOL]
     x_test = x_test[:SMOL]
     y_train = y_train[:SMOL]
@@ -97,7 +97,7 @@ def get_train_and_test_data():
 def main():
     # set whether to load or compute models
     LOAD_AUTOENCODER = True
-    LOAD_CLASSIFIER = False
+    LOAD_CLASSIFIER = True
 
     # load data
     x_train, x_test, y_train, y_test = get_train_and_test_data()
@@ -164,17 +164,31 @@ def main():
     # classifier = tf.keras.load_model('classifier')
     # autoencoder = tf.keras.load_model('autoencoder')
     new_genre = 5
-    genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre)
-    genre_switcher.compile(optimizer="adam")
-    # print(x_test[0], x_test[0].shape)
     input = x_test[:1]
-    print(input.shape)
-    latent_vector = autoencoder.encoder(x_test)
-    # latent_vector = autoencoder.encoder(x_test[:1])
-    print(latent_vector)
-    classified = classifier.call(latent_vector)
-    print(classified)
-    # genre_switcher.train(x_test[:1])
+    genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre, input)
+    genre_switcher.compile(optimizer="adam")
+
+    # # print(x_test[0], x_test[0].shape)
+    # input = x_test[:1]
+    # print(input.shape)
+    # latent_vector = autoencoder.encoder(input)
+    # # latent_vector = autoencoder.encoder(x_test[:1])
+    # # print(latent_vector)
+    # classified = classifier.call(latent_vector)
+    # print(classified.shape)
+
+    genre_switcher.train(input)
+    new_song = genre_switcher.compute_results()
+    autoencoded_song = autoencoder.call(input)
+    # print(new_song.shape)
+    # print(input.shape)
+    print(input)
+    print(new_song)
+
+    sf.write("my_water_mixtape.wav", tf.squeeze(input), SAMPLE_RATE)
+    sf.write("my_fire_mixtape.wav", tf.squeeze(new_song), SAMPLE_RATE)
+    sf.write("my_earth_mixtape.wav", tf.squeeze(autoencoded_song), SAMPLE_RATE)
+
 
 
 if __name__ == '__main__':

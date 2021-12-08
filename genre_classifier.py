@@ -9,20 +9,22 @@ class Classifier(tf.keras.Model):
         super(Classifier, self).__init__()
         self.num_genres = 8
         self.num_epochs = 20
-
-        # Consider a conv architecture
-        self.layer1 = Flatten()
-        self.layer2 = Dense(1000, activation="tanh")
-        self.layer3 = Dense(500, activation="relu")
-        self.layer4 = Dense(250, activation="tanh")
-        self.layer5 = Dense(50, activation="relu")
-        self.layer6 = Dense(self.num_genres)
-
         self.batch_size = 100
 
+        self.classifier_layers = tf.keras.Sequential(
+            [
+                Flatten(),
+                Dense(1000, activation="tanh"),
+                Dense(500, activation="relu"),
+                Dense(250, activation="tanh"),
+                Dense(50, activation="relu"),
+                Dense(self.num_genres)
+            ],
+            'classifier_layers'
+        )
+
     def call(self, x):
-        # TODO: use sequential
-        output = self.layer6(self.layer5(self.layer4(self.layer3(self.layer2(self.layer1(x))))))
+        output = self.classifier_layers(x)
         return output
 
     def loss(self, logits, labels):
@@ -41,16 +43,17 @@ class Classifier(tf.keras.Model):
     def accuracy(self, logits, labels):
         """
         Calculates the model's prediction accuracy by comparing
-        logits to correct labels – no need to modify this.
+        logits to correct labels. We use TopKCategoricalAccuracy because many music genres sound similar.
         
         :param logits: a matrix of size (num_inputs, self.num_classes); during training, this will be (batch_size, self.num_classes)
         containing the result of multiple convolution and feed forward layers
         :param labels: matrix of size (num_labels, self.num_classes) containing the answers, during training, this will be (batch_size, self.num_classes)
         
-        :return: the accuracy of the model as a Tensor
+        :return: the accuracy of the model as a scalar
         """
-        correct_predictions = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
-        return tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
+        m = tf.keras.metrics.TopKCategoricalAccuracy(k=3)
+        m.update_state(labels, logits)
+        return m.result().numpy()
     
     def train(model, train_inputs, train_labels):
         '''
@@ -68,21 +71,19 @@ class Classifier(tf.keras.Model):
         '''
         for n in range(model.num_epochs):
             print("Epoch: ", n)
-            # total_loss = 0
+            total_loss = 0
             for i in range(0, len(train_inputs), model.batch_size):
                 batch_images = train_inputs[i:min(len(train_inputs), i + model.batch_size)]
                 batch_labels = train_labels[i:min(len(train_labels), i + model.batch_size)]
 
-                optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+                optimizer = tf.keras.optimizers.Adam(learning_rate=0.0025)
                 with tf.GradientTape() as tape:
                     predictions = model.call(batch_images)
                     loss = model.loss(predictions, batch_labels)
-                    # total_loss += loss
+                    total_loss += loss
                 gradients = tape.gradient(loss, model.trainable_variables)
                 optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-                #print("Total Loss: ", total_loss)
-                print("Loss: ", loss)
-        # print(model.call(batch_images), batch_labels)
+                print("Total Loss: ", total_loss)
     
     def pre_process(self, x_train, x_test, y_train, y_test):
         # Map genre IDs to indices as a procedure for converting to one-hot vectors
@@ -98,12 +99,12 @@ class Classifier(tf.keras.Model):
         }
 
         # Indices of valid genre data (genre in the genre_mapping)
-        y_train_indices = [i for i, genre in enumerate(y_train) if genre in genre_mapping]
-        y_test_indices = [i for i, genre in enumerate(y_test) if genre in genre_mapping]
+        y_train_indices = [i for i, genre in enumerate(y_train) if genre.numpy() in genre_mapping]
+        y_test_indices = [i for i, genre in enumerate(y_test) if genre.numpy() in genre_mapping]
 
         # Get valid genre data
-        y_train_genres = [genre_mapping[y_train[i]] for i in y_train_indices]
-        y_test_genres = [genre_mapping[y_test[i]] for i in y_test_indices]
+        y_train_genres = [genre_mapping[y_train[i].numpy()] for i in y_train_indices]
+        y_test_genres = [genre_mapping[y_test[i].numpy()] for i in y_test_indices]
 
         # Get audio data associated with a valid genre
         x_train = np.take(x_train, y_train_indices, axis=0)
@@ -128,10 +129,7 @@ def classifier_test(model, test_inputs, test_labels):
     :return: test accuracy - this should be the average accuracy across
     all batches
     """
-    print("TEST FUNCTION")
-    print(test_labels.shape)
     logits = model.call(test_inputs)
-    # print(logits, test_labels)
     return model.accuracy(logits, test_labels)
 
 def main():

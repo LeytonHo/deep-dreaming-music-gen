@@ -63,6 +63,12 @@ def get_train_and_test_data():
 
     print(np.shape(audio_data))
     audio_data = np.reshape(audio_data, (np.shape(audio_data)[0], np.shape(audio_data)[1], 1))
+
+    # shuffle audio and genre data
+    new_order = tf.random.shuffle(np.arange(len(audio_data)))
+    audio_data = tf.gather(audio_data, new_order)
+    genre_data = tf.gather(genre_data, new_order)    
+
     print(np.shape(audio_data))
     total_tracks = np.shape(audio_data)[0]
     train_tracks = int(total_tracks * 2 / 3)
@@ -108,11 +114,11 @@ def main():
         print("Autoencoder accuracy: ", accuracy)
 
         # Save autoencoder
-        autoencoder.save_weights('saved_models/autoencoder_to_delete')
+        autoencoder.save_weights('saved_models/autoencoder_new')
 
     ######## LOAD AUTOENCODER ##########################################
     if LOAD_AUTOENCODER:
-        autoencoder.load_weights('saved_models/autoencoder_to_delete').expect_partial()
+        autoencoder.load_weights('saved_models/autoencoder_new').expect_partial()
 
     ######## LOAD CLASSIFIER DATA #########################################
     genre_inputs_train = autoencoder.encoder(x_train)
@@ -128,20 +134,21 @@ def main():
 
     ######## CREATE CLASSIFIER ############################################
     classifier = Classifier()
-    classifier.compute_output_shape(input_shape=np.shape(genre_inputs_train))
-    classifier.build(np.shape(genre_inputs_train))
-    classifier.summary()
 
     x_train_classifier, x_test_classifier, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
+
+    classifier.compute_output_shape(input_shape=np.shape(x_train_classifier))
+    classifier.build(np.shape(x_train_classifier))
+    classifier.summary()
 
     ######## TRAIN AND SAVE CLASSIFIER ####################################
     if not LOAD_CLASSIFIER:
         classifier.train(x_train_classifier, y_train_one_hot)
-        classifier.save_weights('saved_models/classifier')
+        classifier.save_weights('saved_models/classifier_new')
 
     ######## LOAD CLASSIFIER ##############################################
     if LOAD_CLASSIFIER:
-        classifier.load_weights('saved_models/classifier')
+        classifier.load_weights('saved_models/classifier_new')
 
     accuracy = classifier_test(classifier, x_test_classifier, y_test_one_hot)
     print("Classifier accuracy: ", accuracy)

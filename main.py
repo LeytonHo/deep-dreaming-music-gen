@@ -63,6 +63,12 @@ def get_train_and_test_data():
 
     print(np.shape(audio_data))
     audio_data = np.reshape(audio_data, (np.shape(audio_data)[0], np.shape(audio_data)[1], 1))
+
+    # shuffle audio and genre data
+    new_order = tf.random.shuffle(np.arange(len(audio_data)))
+    audio_data = tf.gather(audio_data, new_order)
+    genre_data = tf.gather(genre_data, new_order)
+
     print(np.shape(audio_data))
     total_tracks = np.shape(audio_data)[0]
     train_tracks = int(total_tracks * 2 / 3)
@@ -73,19 +79,8 @@ def get_train_and_test_data():
     y_train = genre_data[:train_tracks]
     y_test = y_test = genre_data[train_tracks:]
 
-    # shuffle audio and genre data
-    # print(x_train.shape, y_train.shape)
-    # new_order = tf.random.shuffle(np.arange(x_train.shape[0]))
-    # x_train = tf.gather(x_train, new_order)
-    # y_train = tf.gather(y_train, new_order)
-    # print('\n\n\n\n')
-    # print(x_train.shape, y_train.shape)
-    # new_order = tf.random.shuffle(np.arange(x_test.shape[0]))
-    # x_test = tf.gather(x_test, new_order)
-    # y_test = tf.gather(y_test, new_order)
-
     ############# SHRINK FOR TESTING ###############################################
-    SMOL = 1000
+    SMOL = 100
     x_train = x_train[:SMOL]
     x_test = x_test[:SMOL]
     y_train = y_train[:SMOL]
@@ -96,7 +91,7 @@ def get_train_and_test_data():
 
 def main():
     # set whether to load or compute models
-    LOAD_AUTOENCODER = True
+    LOAD_AUTOENCODER = False
     LOAD_CLASSIFIER = False
 
     # load data

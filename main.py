@@ -67,8 +67,8 @@ def get_train_and_test_data():
     # shuffle audio and genre data
     new_order = tf.random.shuffle(np.arange(len(audio_data)))
     audio_data = tf.gather(audio_data, new_order)
-    genre_data = tf.gather(genre_data, new_order)
-    
+    genre_data = tf.gather(genre_data, new_order)    
+
     print(np.shape(audio_data))
     total_tracks = np.shape(audio_data)[0]
     train_tracks = int(total_tracks * 2 / 3)
@@ -80,7 +80,7 @@ def get_train_and_test_data():
     y_test = y_test = genre_data[train_tracks:]
 
     ############# SHRINK FOR TESTING ###############################################
-    SMOL = 10
+    SMOL = 100
     x_train = x_train[:SMOL]
     x_test = x_test[:SMOL]
     y_train = y_train[:SMOL]
@@ -92,7 +92,7 @@ def get_train_and_test_data():
 def main():
     # set whether to load or compute models
     LOAD_AUTOENCODER = True
-    LOAD_CLASSIFIER = False
+    LOAD_CLASSIFIER = True
 
     # load data
     x_train, x_test, y_train, y_test = get_train_and_test_data()
@@ -143,9 +143,6 @@ def main():
 
     ######## TRAIN AND SAVE CLASSIFIER ####################################
     if not LOAD_CLASSIFIER:
-        # x_train_latent_vector = autoencoder.encoder(x_train)
-        # print(x_train.shape, y_train_one_hot.shape)
-        # print(x_train_latent_vector.shape)
         classifier.train(x_train_classifier, y_train_one_hot)
         classifier.save_weights('saved_models/classifier_new')
 
@@ -157,20 +154,21 @@ def main():
     print("Classifier accuracy: ", accuracy)
 
     # switch genres
-    # classifier = tf.keras.load_model('classifier')
-    # autoencoder = tf.keras.load_model('autoencoder')
     new_genre = 5
-    genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre)
-    genre_switcher.compile(optimizer="adam")
-    # print(x_test[0], x_test[0].shape)
     input = x_test[:1]
-    print(input.shape)
-    latent_vector = autoencoder.encoder(x_test)
-    # latent_vector = autoencoder.encoder(x_test[:1])
-    print(latent_vector)
-    classified = classifier.call(latent_vector)
-    print(classified)
-    # genre_switcher.train(x_test[:1])
+    genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre, input)
+    genre_switcher.compile(optimizer="adam")
+
+    genre_switcher.train(input)
+    new_song = genre_switcher.compute_results()
+    autoencoded_song = autoencoder.call(input)
+    print(input)
+    print(new_song)
+
+    sf.write("my_water_mixtape.wav", tf.squeeze(input), SAMPLE_RATE)
+    sf.write("my_fire_mixtape.wav", tf.squeeze(new_song), SAMPLE_RATE)
+    sf.write("my_earth_mixtape.wav", tf.squeeze(autoencoded_song), SAMPLE_RATE)
+
 
 
 if __name__ == '__main__':

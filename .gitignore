@@ -8,3 +8,4 @@ __pycache__/
 preprocessed.pickle
 *.wav
 saved_models/
+*.pickle

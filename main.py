@@ -85,7 +85,7 @@ def get_train_and_test_data():
     # y_test = tf.gather(y_test, new_order)
 
     ############# SHRINK FOR TESTING ###############################################
-    SMOL = 100
+    SMOL = 1000
     x_train = x_train[:SMOL]
     x_test = x_test[:SMOL]
     y_train = y_train[:SMOL]
@@ -97,7 +97,7 @@ def get_train_and_test_data():
 def main():
     # set whether to load or compute models
     LOAD_AUTOENCODER = True
-    LOAD_CLASSIFIER = True
+    LOAD_CLASSIFIER = False
 
     # load data
     x_train, x_test, y_train, y_test = get_train_and_test_data()
@@ -126,8 +126,8 @@ def main():
         autoencoder.load_weights('saved_models/autoencoder_to_delete').expect_partial()
 
     ######## LOAD CLASSIFIER DATA #########################################
-    genre_inputs_train = autoencoder.call(x_train)
-    genre_inputs_test = autoencoder.call(x_test)
+    genre_inputs_train = autoencoder.encoder(x_train)
+    genre_inputs_test = autoencoder.encoder(x_test)
 
     print("SHAPE OF genre inputs train, test")
     print(genre_inputs_train.shape)
@@ -143,18 +143,21 @@ def main():
     classifier.build(np.shape(genre_inputs_train))
     classifier.summary()
 
-    x_train, x_test, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
+    x_train_classifier, x_test_classifier, y_train_one_hot, y_test_one_hot = classifier.pre_process(genre_inputs_train, genre_inputs_test, y_train, y_test)
 
     ######## TRAIN AND SAVE CLASSIFIER ####################################
     if not LOAD_CLASSIFIER:
-        classifier.train(x_train, y_train_one_hot)
+        # x_train_latent_vector = autoencoder.encoder(x_train)
+        # print(x_train.shape, y_train_one_hot.shape)
+        # print(x_train_latent_vector.shape)
+        classifier.train(x_train_classifier, y_train_one_hot)
         classifier.save_weights('saved_models/classifier')
 
     ######## LOAD CLASSIFIER ##############################################
     if LOAD_CLASSIFIER:
         classifier.load_weights('saved_models/classifier')
 
-    accuracy = classifier_test(classifier, x_test, y_test_one_hot)
+    accuracy = classifier_test(classifier, x_test_classifier, y_test_one_hot)
     print("Classifier accuracy: ", accuracy)
 
     # switch genres
@@ -164,7 +167,14 @@ def main():
     genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre)
     genre_switcher.compile(optimizer="adam")
     # print(x_test[0], x_test[0].shape)
-    genre_switcher.train(x_test[0])
+    input = x_test[:1]
+    print(input.shape)
+    latent_vector = autoencoder.encoder(x_test)
+    # latent_vector = autoencoder.encoder(x_test[:1])
+    print(latent_vector)
+    classified = classifier.call(latent_vector)
+    print(classified)
+    # genre_switcher.train(x_test[:1])
 
 
 if __name__ == '__main__':

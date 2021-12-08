@@ -17,6 +17,7 @@ class GenreSwitcher(tf.keras.Model):
         self.latent_vector = tf.Variable(np.zeros(self.autoencoder.input_size))
 
     def set_latent_vector(self, input):
+        print(input.shape, self.autoencoder.input_size)
         latent_vector = self.autoencoder.encoder(input)
         self.latent_vector = tf.Variable(latent_vector)
 

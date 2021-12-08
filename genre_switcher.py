@@ -10,7 +10,7 @@ import pickle
 class GenreSwitcher(tf.keras.Model):
     def __init__(self, classifier, autoencoder, desired_classification, input):
         super(GenreSwitcher, self).__init__()
-        self.num_epochs = 5
+        self.num_epochs = 50
         self.desired_classification = desired_classification
         self.classifier = classifier
         self.autoencoder = autoencoder
@@ -23,17 +23,21 @@ class GenreSwitcher(tf.keras.Model):
 
     def call(self):
         """Predict the classification based upon the learned latent vector."""
-        print(self.latent_vector)
+        #print(self.latent_vector)
         classification = self.classifier(self.latent_vector)
 
         return classification
 
     def loss_function(self, classification):
         """Calculate the deviation of the given classification from the desired."""
-        loss_array = tf.keras.losses.sparse_categorical_crossentropy(
-            [self.desired_classification], classification
-        )
-        return tf.math.reduce_sum(loss_array)
+        # print(self.desired_classification)
+        # print(classification)
+        total_loss = tf.nn.softmax_cross_entropy_with_logits(tf.one_hot(self.desired_classification, 8), classification)
+        # loss_array = tf.keras.losses.sparse_categorical_crossentropy(
+            # self.desired_classification, tf.squeeze(classification)
+        # )
+        # print("loss_array", loss_array)
+        return tf.math.reduce_sum(total_loss)
 
     def compute_results(self):
         """Turn the learned latent vector into the music wave output."""
@@ -41,7 +45,7 @@ class GenreSwitcher(tf.keras.Model):
 
     def train(self, original_song):
         # TODO
-        optimizer = tf.keras.optimizers.Adam()
+        optimizer = tf.keras.optimizers.Adam(0.1)
         # self.set_latent_vector(original_song)
 
         for _ in range(self.num_epochs):

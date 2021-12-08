@@ -8,30 +8,32 @@ import pickle
 
 
 class GenreSwitcher(tf.keras.Model):
-    def __init__(self, classifier, autoencoder, desired_classification):
+    def __init__(self, classifier, autoencoder, desired_classification, input):
         super(GenreSwitcher, self).__init__()
         self.num_epochs = 5
         self.desired_classification = desired_classification
         self.classifier = classifier
         self.autoencoder = autoencoder
-        self.latent_vector = tf.Variable(np.zeros(self.autoencoder.input_size))
-
-    def set_latent_vector(self, input):
-        print(input.shape, self.autoencoder.input_size)
         latent_vector = self.autoencoder.encoder(input)
         self.latent_vector = tf.Variable(latent_vector)
 
+        # fix model weights
+        self.classifier.trainable = False
+        self.autoencoder.trainable = False
+
     def call(self):
         """Predict the classification based upon the learned latent vector."""
+        print(self.latent_vector)
         classification = self.classifier(self.latent_vector)
 
         return classification
 
-    def loss(self, classification):
+    def loss_function(self, classification):
         """Calculate the deviation of the given classification from the desired."""
-        return tf.keras.losses.sparse_categorical_crossentropy(
-            self.desired_classification, classification
+        loss_array = tf.keras.losses.sparse_categorical_crossentropy(
+            [self.desired_classification], classification
         )
+        return tf.math.reduce_sum(loss_array)
 
     def compute_results(self):
         """Turn the learned latent vector into the music wave output."""
@@ -40,15 +42,16 @@ class GenreSwitcher(tf.keras.Model):
     def train(self, original_song):
         # TODO
         optimizer = tf.keras.optimizers.Adam()
-        self.set_latent_vector(original_song)
+        # self.set_latent_vector(original_song)
 
         for _ in range(self.num_epochs):
             with tf.GradientTape() as tape:
                 classification = self.call()
-                loss = self.loss(classification)
-                print(loss)
+                # print(self.loss)
+                loss = self.loss_function(classification)
+                print("loss:", loss)
         
-            gradients = tape.gradients(self.trainable_variables)
+            gradients = tape.gradient(loss, self.trainable_variables)
             optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
             # stop training if desired classification is reached

@@ -59,10 +59,8 @@ def test(model, test_data, batch_size):
 
 def get_train_and_test_data():
     with open('preprocessed.pickle', 'rb') as f:
-        audio_data, sr_data, genre_data = pickle.load(f)
+        audio_data, _, genre_data = pickle.load(f)
 
-
-    print(np.shape(audio_data))
     audio_data = np.reshape(audio_data, (np.shape(audio_data)[0], np.shape(audio_data)[1], 1))
 
     # shuffle audio and genre data
@@ -70,10 +68,9 @@ def get_train_and_test_data():
     audio_data = tf.gather(audio_data, new_order)
     genre_data = tf.gather(genre_data, new_order)    
 
-    print(np.shape(audio_data))
     total_tracks = np.shape(audio_data)[0]
     train_tracks = int(total_tracks * 2 / 3)
-    print(train_tracks)
+    
     x_train = audio_data[:train_tracks]
     x_test = audio_data[train_tracks:]
 

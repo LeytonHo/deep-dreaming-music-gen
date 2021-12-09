@@ -13,10 +13,11 @@ class GenreSwitcher(tf.keras.Model):
         self.num_epochs = num_epochs
         self.optimizer = tf.keras.optimizers.Adam(learning_rate)
         self.desired_classification = desired_classification
+
         self.classifier = classifier
         self.autoencoder = autoencoder
-        latent_vector = self.autoencoder.encoder(input)
-        self.latent_vector = tf.Variable(latent_vector)
+
+        self.latent_vector = tf.Variable(self.autoencoder.encoder(input))
 
         # fix model weights
         self.classifier.trainable = False

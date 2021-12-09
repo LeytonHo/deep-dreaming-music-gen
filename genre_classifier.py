@@ -14,10 +14,10 @@ class Classifier(tf.keras.Model):
         self.classifier_layers = tf.keras.Sequential(
             [
                 Flatten(),
-                Dense(1000, activation="tanh"),
-                Dense(500, activation="relu"),
-                Dense(250, activation="tanh"),
-                Dense(50, activation="relu"),
+                Dense(500, activation="tanh"),
+                Dense(250, activation="relu"),
+                Dense(100, activation="tanh"),
+                Dense(40, activation="relu"),
                 Dense(self.num_genres)
             ],
             'classifier_layers'
@@ -76,14 +76,14 @@ class Classifier(tf.keras.Model):
                 batch_images = train_inputs[i:min(len(train_inputs), i + model.batch_size)]
                 batch_labels = train_labels[i:min(len(train_labels), i + model.batch_size)]
 
-                optimizer = tf.keras.optimizers.Adam(learning_rate=0.0025)
+                optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
                 with tf.GradientTape() as tape:
                     predictions = model.call(batch_images)
                     loss = model.loss(predictions, batch_labels)
                     total_loss += loss
                 gradients = tape.gradient(loss, model.trainable_variables)
                 optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-                print("Total Loss: ", total_loss)
+            print("Total Loss: ", total_loss)
     
     def pre_process(self, x_train, x_test, y_train, y_test):
         # Map genre IDs to indices as a procedure for converting to one-hot vectors

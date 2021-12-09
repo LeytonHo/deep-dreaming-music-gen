@@ -80,11 +80,11 @@ def get_train_and_test_data():
     y_test = y_test = genre_data[train_tracks:]
 
     ############# SHRINK FOR TESTING ###############################################
-    SMOL = 100
-    x_train = x_train[:SMOL]
-    x_test = x_test[:SMOL]
-    y_train = y_train[:SMOL]
-    y_test = y_test[:SMOL]
+    # SMOL = 100
+    # x_train = x_train[:SMOL]
+    # x_test = x_test[:SMOL]
+    # y_train = y_train[:SMOL]
+    # y_test = y_test[:SMOL]
     ################################################################################
 
     return x_train, x_test, y_train, y_test
@@ -145,29 +145,30 @@ def main():
     if not LOAD_CLASSIFIER:
         classifier.train(x_train_classifier, y_train_one_hot)
         classifier.save_weights('saved_models/classifier_new')
+        accuracy = classifier_test(classifier, x_test_classifier, y_test_one_hot)
+        print("Classifier accuracy: ", accuracy)
 
     ######## LOAD CLASSIFIER ##############################################
     if LOAD_CLASSIFIER:
         classifier.load_weights('saved_models/classifier_new')
 
-    accuracy = classifier_test(classifier, x_test_classifier, y_test_one_hot)
-    print("Classifier accuracy: ", accuracy)
-
     # switch genres
-    new_genre = 5
-    input = x_test[:1]
-    genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre, input)
-    genre_switcher.compile(optimizer="adam")
+    while True:
+        new_genre = input("\n Enter genre: ")
+        index = input("\n Enter index of song: ")
+        input = [x_test[index]]
+        learning_rate = float(input("\n Enter learning rate: "))
+        epochs = int(input("\n Enter epochs: "))
+        genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre, input, learning_rate, epochs)
+        genre_switcher.compile(optimizer="adam")
 
-    genre_switcher.train(input)
-    new_song = genre_switcher.compute_results()
-    autoencoded_song = autoencoder.call(input)
-    print(input)
-    print(new_song)
+        genre_switcher.train()
+        new_song = genre_switcher.compute_results()
+        autoencoded_song = autoencoder.call(input)
 
-    sf.write("my_water_mixtape.wav", tf.squeeze(input), SAMPLE_RATE)
-    sf.write("my_fire_mixtape.wav", tf.squeeze(new_song), SAMPLE_RATE)
-    sf.write("my_earth_mixtape.wav", tf.squeeze(autoencoded_song), SAMPLE_RATE)
+        sf.write("my_water_mixtape" + index + ".wav", tf.squeeze(input), SAMPLE_RATE)
+        sf.write("my_fire_mixtape" + index + ".wav", tf.squeeze(new_song), SAMPLE_RATE)
+        sf.write("my_earth_mixtape" + index + ".wav", tf.squeeze(autoencoded_song), SAMPLE_RATE)
 
 
 

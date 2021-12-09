@@ -8,9 +8,10 @@ import pickle
 
 
 class GenreSwitcher(tf.keras.Model):
-    def __init__(self, classifier, autoencoder, desired_classification, input):
+    def __init__(self, classifier, autoencoder, desired_classification, input, learning_rate=0.01, num_epochs=1):
         super(GenreSwitcher, self).__init__()
-        self.num_epochs = 1
+        self.num_epochs = num_epochs
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate)
         self.desired_classification = desired_classification
         self.classifier = classifier
         self.autoencoder = autoencoder
@@ -37,19 +38,15 @@ class GenreSwitcher(tf.keras.Model):
         """Turn the learned latent vector into the music wave output."""
         return self.autoencoder.decoder(self.latent_vector)
 
-    def train(self, original_song):
-        # TODO
-        optimizer = tf.keras.optimizers.Adam(0.001)
-
+    def train(self):
         for _ in range(self.num_epochs):
             with tf.GradientTape() as tape:
                 classification = self.call()
-                # print(self.loss)
                 loss = self.loss_function(classification)
                 print("loss:", loss)
         
             gradients = tape.gradient(loss, self.trainable_variables)
-            optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+            self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
             # stop training if desired classification is reached
 

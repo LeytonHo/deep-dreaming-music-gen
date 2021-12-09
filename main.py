@@ -6,6 +6,7 @@ import pickle
 import numpy as np
 from genre_switcher import GenreSwitcher
 from preprocess import INPUT_SIZE, SAMPLE_RATE
+import builtins
 
 def train(model : Autoencoder, train_data, num_epochs, batch_size):
     """
@@ -92,6 +93,7 @@ def get_train_and_test_data():
 def main():
     # set whether to load or compute models
     LOAD_AUTOENCODER = True
+    LOAD_CLASSIFIER_DATA = True
     LOAD_CLASSIFIER = True
 
     # load data
@@ -121,16 +123,17 @@ def main():
         autoencoder.load_weights('saved_models/autoencoder_new').expect_partial()
 
     ######## LOAD CLASSIFIER DATA #########################################
-    genre_inputs_train = autoencoder.encoder(x_train)
-    genre_inputs_test = autoencoder.encoder(x_test)
+    if LOAD_CLASSIFIER_DATA:
+        with open('autoencoder_output.pickle', 'rb') as f:
+            genre_inputs_train, genre_inputs_test = pickle.load(f)
+    
+    if not LOAD_CLASSIFIER_DATA:
+        genre_inputs_train = autoencoder.encoder(x_train)
+        genre_inputs_test = autoencoder.encoder(x_test)
 
-    print("SHAPE OF genre inputs train, test")
-    print(genre_inputs_train.shape)
-    print(genre_inputs_test.shape)
-
-    # save autoencoder outputs
-    with open('autoencoder_output.pickle', 'wb') as f:
-        pickle.dump((genre_inputs_train, genre_inputs_test), f)
+        # save autoencoder outputs
+        with open('autoencoder_output.pickle', 'wb') as f:
+            pickle.dump((genre_inputs_train, genre_inputs_test), f)
 
     ######## CREATE CLASSIFIER ############################################
     classifier = Classifier()
@@ -154,11 +157,11 @@ def main():
 
     # switch genres
     while True:
-        new_genre = input("\n Enter genre: ")
-        index = input("\n Enter index of song: ")
-        input = [x_test[index]]
-        learning_rate = float(input("\n Enter learning rate: "))
-        epochs = int(input("\n Enter epochs: "))
+        new_genre = int(builtins.input("Enter genre: "))
+        index = int(builtins.input("Enter index of song: "))
+        input = x_test[index-1:index]
+        learning_rate = float(builtins.input("Enter learning rate: "))
+        epochs = int(builtins.input("Enter epochs: "))
         genre_switcher = GenreSwitcher(classifier, autoencoder, new_genre, input, learning_rate, epochs)
         genre_switcher.compile(optimizer="adam")
 
@@ -166,9 +169,9 @@ def main():
         new_song = genre_switcher.compute_results()
         autoencoded_song = autoencoder.call(input)
 
-        sf.write("my_water_mixtape" + index + ".wav", tf.squeeze(input), SAMPLE_RATE)
-        sf.write("my_fire_mixtape" + index + ".wav", tf.squeeze(new_song), SAMPLE_RATE)
-        sf.write("my_earth_mixtape" + index + ".wav", tf.squeeze(autoencoded_song), SAMPLE_RATE)
+        sf.write("outputs/" + str(index) + "original_my_water_mixtape.wav", tf.squeeze(input), SAMPLE_RATE)
+        sf.write("outputs/" + str(index) + "autoencoded_my_earth_mixtape.wav", tf.squeeze(autoencoded_song), SAMPLE_RATE)
+        sf.write("outputs/" + str(index) + "switched_my_fire_mixtape.wav", tf.squeeze(new_song), SAMPLE_RATE)
 
 
 

@@ -24,10 +24,8 @@ class GenreSwitcher(tf.keras.Model):
 
     def call(self):
         """Predict the classification based upon the learned latent vector."""
-        #print(self.latent_vector)
-        classification = self.classifier(self.latent_vector)
-
-        return classification
+        print("latent vector", self.latent_vector)
+        return self.classifier(self.latent_vector)
 
     def loss_function(self, classification):
         """Calculate the deviation of the given classification from the desired."""
@@ -44,7 +42,7 @@ class GenreSwitcher(tf.keras.Model):
                 classification = self.call()
                 loss = self.loss_function(classification)
                 print("loss:", loss)
-        
+
             gradients = tape.gradient(loss, self.trainable_variables)
             self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
